@@ -178,7 +178,7 @@
   margin-bottom: 0.85rem;
 }
 
-.ratings__board.is-guest [data-action="add-game"] {
+.ratings__board.is-guest [data-action='add-game'] {
   display: none;
 }
 
@@ -713,6 +713,7 @@
 }
 
 .ratings__cover-frame {
+  aspect-ratio: 16/7;
   width: auto;
   height: auto;
   overflow: hidden;
