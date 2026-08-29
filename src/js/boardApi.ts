@@ -10,6 +10,7 @@ export interface Game {
   id: string;
   title: string;
   bannerUrl: string;
+  createdAt: string;
   ratings: Record<string, number | null>;
 }
 
@@ -139,6 +140,7 @@ export async function loadBoard(): Promise<Board> {
       id: row.id,
       title: row.title ?? '',
       bannerUrl: row.banner_url ?? '',
+      createdAt: typeof row.created_at === 'string' ? row.created_at : '',
       ratings,
     };
   });

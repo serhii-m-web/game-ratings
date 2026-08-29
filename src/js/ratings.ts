@@ -216,6 +216,34 @@ function createTitleText(game: Game): HTMLParagraphElement {
   });
 }
 
+function formatAddedDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function createAddedDate(game: Game): HTMLTimeElement | null {
+  const label = formatAddedDate(game.createdAt);
+  if (!label) {
+    return null;
+  }
+
+  return el('time', {
+    className: 'ratings__added',
+    text: label,
+    attrs: {
+      datetime: game.createdAt,
+    },
+  });
+}
+
 function createScoreInput(
   game: Game,
   rater: Rater,
@@ -326,6 +354,9 @@ export function initRatings(): void {
   const listSearch = document.querySelector<HTMLInputElement>(
     '[data-list-search]',
   );
+  const sortButtons = document.querySelectorAll<HTMLButtonElement>(
+    '[data-sort]',
+  );
 
   if (
     !table ||
@@ -339,7 +370,8 @@ export function initRatings(): void {
     !pinGate ||
     !pinForm ||
     !boardView ||
-    !listSearch
+    !listSearch ||
+    sortButtons.length === 0
   ) {
     return;
   }
@@ -373,6 +405,8 @@ export function initRatings(): void {
   let board: Board = { raters: [], games: [] };
   let session: PlayerSession | null = null;
   let listQuery = '';
+  type ListSort = 'name' | 'date' | 'rating';
+  let listSort: ListSort = 'name';
   let refreshing = false;
   let refreshQueued = false;
   let suggestGameId: string | null = null;
@@ -427,25 +461,85 @@ export function initRatings(): void {
     );
   }
 
+  function compareByName(left: Game, right: Game): number {
+    const a = left.title.trim();
+    const b = right.title.trim();
+    if (!a && !b) {
+      return 0;
+    }
+    if (!a) {
+      return -1;
+    }
+    if (!b) {
+      return 1;
+    }
+    return a.localeCompare(b, undefined, { sensitivity: 'base' });
+  }
+
+  function compareByDate(left: Game, right: Game): number {
+    const a = Date.parse(left.createdAt);
+    const b = Date.parse(right.createdAt);
+    const aOk = Number.isFinite(a);
+    const bOk = Number.isFinite(b);
+    if (!aOk && !bOk) {
+      return compareByName(left, right);
+    }
+    if (!aOk) {
+      return 1;
+    }
+    if (!bOk) {
+      return -1;
+    }
+    return b - a || compareByName(left, right);
+  }
+
+  function averageRating(game: Game): number | null {
+    const scores = Object.values(game.ratings).filter(
+      (score): score is number => score !== null,
+    );
+    if (!scores.length) {
+      return null;
+    }
+
+    return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  }
+
+  function compareByRating(left: Game, right: Game): number {
+    const a = averageRating(left);
+    const b = averageRating(right);
+    if (a === null && b === null) {
+      return compareByName(left, right);
+    }
+    if (a === null) {
+      return 1;
+    }
+    if (b === null) {
+      return -1;
+    }
+    return b - a || compareByName(left, right);
+  }
+
   function visibleGames(): Game[] {
     const query = listQuery.trim().toLowerCase();
     const games = query
       ? board.games.filter((game) => game.title.toLowerCase().includes(query))
       : board.games.slice();
 
-    return games.sort((left, right) => {
-      const a = left.title.trim();
-      const b = right.title.trim();
-      if (!a && !b) {
-        return 0;
-      }
-      if (!a) {
-        return -1;
-      }
-      if (!b) {
-        return 1;
-      }
-      return a.localeCompare(b, undefined, { sensitivity: 'base' });
+    const compare =
+      listSort === 'date'
+        ? compareByDate
+        : listSort === 'rating'
+          ? compareByRating
+          : compareByName;
+
+    return games.sort(compare);
+  }
+
+  function syncSortButtons(): void {
+    sortButtons.forEach((button) => {
+      const active = button.dataset.sort === listSort;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
   }
 
@@ -1119,6 +1213,7 @@ export function initRatings(): void {
   function render(): void {
     hideSuggest();
     syncSessionControls();
+    syncSortButtons();
 
     const caption = el('caption', {
       className: 'visually-hidden',
@@ -1219,8 +1314,8 @@ export function initRatings(): void {
           }),
         );
       }
-      picker.append(
-        coverFrame,
+      const titleMeta = el('div', { className: 'ratings__game-meta' });
+      titleMeta.append(
         canMutate() && !game.title.trim()
           ? el('input', {
               className: 'ratings__title-input',
@@ -1238,6 +1333,11 @@ export function initRatings(): void {
             })
           : createTitleText(game),
       );
+      const addedDate = createAddedDate(game);
+      if (addedDate) {
+        titleMeta.append(addedDate);
+      }
+      picker.append(coverFrame, titleMeta);
       titleCell.append(picker);
       row.append(titleCell);
 
@@ -1505,6 +1605,21 @@ export function initRatings(): void {
     listSearch.value = '';
     render();
     listSearch.focus();
+  });
+
+  sortButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = button.dataset.sort;
+      if (next !== 'name' && next !== 'date' && next !== 'rating') {
+        return;
+      }
+
+      listSort = next;
+      render();
+      const label =
+        next === 'date' ? 'date' : next === 'rating' ? 'rating' : 'name';
+      setStatus(`Sorted by ${label}.`);
+    });
   });
 
   playerButton.addEventListener('click', () => {

@@ -188,6 +188,42 @@
   max-width: 22rem;
 }
 
+.ratings__sort {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid $color-border;
+  border-radius: 2px;
+  background: rgba($color-bg, 0.72);
+}
+
+.ratings__sort-btn {
+  height: 40px;
+  padding: 0 0.85rem;
+  border: 0;
+  border-right: 1px solid $color-border;
+  background: transparent;
+  color: $color-muted;
+  font-family: $font-display;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  &:last-child {
+    border-right: 0;
+  }
+
+  &:hover {
+    color: $color-accent;
+    background: rgba($color-accent, 0.08);
+  }
+
+  &.is-active {
+    color: $color-on-dark;
+    background: $color-accent;
+  }
+}
+
 .ratings__list-search input {
   width: 100%;
   height: 40px;
@@ -641,7 +677,7 @@
 
 .ratings__title-text {
   margin: 0;
-  padding: 0.4rem 0;
+  padding: 0.4rem 0 0;
   color: inherit;
   font: inherit;
   font-weight: 600;
@@ -649,6 +685,24 @@
   letter-spacing: 0.02em;
   text-align: center;
   text-transform: none;
+}
+
+.ratings__game-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.ratings__added {
+  margin: 0;
+  padding: 0.15rem 0 0.2rem;
+  font-family: $font-display;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $color-muted;
 }
 
 .ratings__game-pick {
