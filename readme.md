@@ -9,7 +9,7 @@ A shared game scoreboard: rows are games, columns are players. Data lives in Sup
 - Anyone else signed in can add games; scores go only in your own column
 - Steam search (from 2 characters): title and banner are filled from the suggestion
 - After save, the title becomes read-only text; duplicates are blocked
-- List filter and alphabetical sort (empty titles stay at the top)
+- List filter and sort by name, date, or rating (default: newest first)
 - Scores from 0 to 10, step 0.1: `7.5`, `7,5`, or `75` → `7.5`. Saved on blur
 - Admin: delete games, manage players (name, PIN, add and remove)
 - Switch player without logging out: the PIN overlay can be dismissed (Cancel / Escape / backdrop)

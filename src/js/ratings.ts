@@ -406,7 +406,7 @@ export function initRatings(): void {
   let session: PlayerSession | null = null;
   let listQuery = '';
   type ListSort = 'name' | 'date' | 'rating';
-  let listSort: ListSort = 'name';
+  let listSort: ListSort = 'date';
   let refreshing = false;
   let refreshQueued = false;
   let suggestGameId: string | null = null;
